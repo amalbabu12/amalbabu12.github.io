@@ -1,5 +1,5 @@
 ---
-title: "R Project 2 SDS 322E"
+title: "Classification of Soccer Player Position by Numeric Metrics"
 author: "Amal Babu, Ani Thakur"
 date: "5/11/2022"
 output: html_document
@@ -9,38 +9,34 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Loading Packages
 
-```{r echo=FALSE}
+
+```{r echo=FALSE, message=FALSE}
 #install.packages("RSQLite")
 library(RSQLite)
 library(dplyr)
-
-#install.packages("tidyverse")
 library(tidyverse)
-#install.packages("dplyr")
 library(dplyr)
-#install.packages("ggplot2")
 library(ggplot2)
-#install.packages("car")
 library(car)
-#install.packages("ggpubr")
 library(ggpubr)
 library(cluster)
 library(factoextra)
-
 library(caret)
 library(plotROC)
+library(knitr)
 ```
+## Introduction
+As both of us are have played soccer for most of our lives, we thought it would be interesting to look at characteristics of professional soccer players around the world. We looked at 3 datasets from Kaggle. The first, called Soccer_Stats looks at numeric metrics in the 2015-2016 Premier League season for each FIFA player, such as overall rating, preferred foot, crossing, finishing, standing tackle, etc. We selected the data to only look at 12 key metrics, namely crossing', 'finishing', 'dribbling', 'sprint_speed', 'stamina', 'strength','aggression', 'vision', 'marking', 'standing_tackle', 'player_name', 'Position', 'Appearances' The second dataset called "player_pos" looks at variables such as team, position, appearances, goals, etc. for each professional player in the Premier League in the 2015-2016 season This dataset had 4179 observations that we selected on three variables, "player," "position," and "appearances." The third dataset looks at each player name and their FIFA ID number. This dataset allowed us to merge the two previous datasets upon the player name. To clean and tidy the data after merging we had to remove all null rows, remove duplicate rows for each player as FIFA constantly updates rankings to isolate one set of observations per player, and create a randomized smaller dataset to reduce the number of data points. Before beginning the analysis, some trends we expected were strong relationships between the finishing, dribbling, and sprint speed, as those players are primarily attackers and require those skills in abundance. On the defensive side we expected a strong relationship between a player's strength, aggression, and standing tackle, as those are important attributes for defenders. 
+
+We also expected distinct clustering of players by position, as FIFA normally classifies player heavily based on what their position is. Some categories are more attacking based while others are defensive, and we expected that these variables will lead to significant variance between attackers and defenders. Finally, we expected that goalkeepers will be far away from all other players, as their skillset is entirely unique.
 
 ## Connect to Database
-
 ```{r}
 connection <- dbConnect(RSQLite::SQLite(), dbname="database.sqlite")
 ```
 
 ## Gathering Datasets
-
 ```{r}
 soccer_stats <- tbl(connection, 'Player_Attributes')
 
@@ -59,7 +55,7 @@ soccer <- left_join(soccer, player_pos, by=c('player_name'='Player'), copy=TRUE)
 ```
 
 ## Data Cleaning/Tidying
-
+We selected 10 integer variables, as well as a players Position and Name which are chr. Variables. We converted all the integer variables to numerics, and deleted repeating entries for the same player, keeping only the first observation for each player. There are many observations because FIFA updates ratings multiple times throughout the year. Finally, to get rid of data points we randomnly sampled 20% of the data to keep a smaller dataset.
 ```{r}
 # select important attributes
 soccer <- soccer %>%
@@ -67,7 +63,7 @@ soccer <- soccer %>%
            'aggression', 'vision', 'marking', 'standing_tackle', 'player_name', 'Position', 'Appearances'))
 #save as data frame
 soccer <- as.data.frame(soccer)
-head(soccer)
+
 
 # convert integer rows to numeric, drop NA's
 soccer <- soccer %>%
@@ -82,6 +78,10 @@ soccer <- soccer %>%
   filter(row_number() == 1)%>%
   select(-Appearances)
 
+kable(head(soccer))
+
+
+set.seed(322)
 # create smaller dataset to reduce data points
 small_soccer <- soccer %>% ungroup %>% sample_frac(0.2)
 
@@ -115,8 +115,11 @@ pairs.panels(soccer,
              hist.col = "magenta", 
              smooth = FALSE, density = FALSE, ellipses = FALSE)
 ```
+
+
 ## Setting up the Clustering
-Initially we set up pam for the small_soccer dataset. However, we found that including Midfielders was a problem, as midfielders have attributes of both defenders and attackers, and are this hard to classify. Our final dataset was created by dropping all midfielders and classifying just forwards, defenders, and goalkeepers.
+
+Initially we set up pam for the small_soccer dataset. However, we found that including Midfielders was a problem, as midfielders have attributes of both defenders and attackers, and are this hard to classify. Our final dataset was created by dropping all midfielders and classifying just forwards, defenders, and goalkeepers. You can see the intital clustering with k=4 below: notice how midfielders are scattered across 3 clusters.
 ```{r}
 #PAM clustering
 pam_results <- small_soccer%>%
@@ -158,9 +161,17 @@ no_mid_pam <- small_soccer_no_mid %>%
 
 cluster_column_pam <- small_soccer_no_mid %>%
   mutate(cluster = as.factor(no_mid_pam$clustering))
+
 fviz_cluster(no_mid_pam, data=small_soccer_no_mid, shape = 0) + 
   geom_point(aes(shape=small_soccer_no_mid$Position))+
   guides(shape = guide_legend(title = 'shape'))
+```
+We also reported some summary statistics about the clusters; for example, for cluster 1 the highest mean was 'finishing' while the lowest mean was 'marking'. For cluster 2 the highest average was 'strength' and 'standing tackle' while the lowest was 'finishing'. Finally for cluster 3, the highest average was 'strenth' and the lowest was 'finishing'. While cluster 3 is harder to tell, it is easy to infer that cluster 1 is forwards and cluster 2 is defenders. We also found average width of clusters and the center point of each cluster
+
+```{r}
+kable(cluster_column_pam %>%
+  group_by(cluster)%>%
+  summarize_if(is.numeric, mean, na.rm=T))
 
 no_mid_pam$silinfo$avg.width
 no_mid_pam$medoids
@@ -172,12 +183,11 @@ In order to do predict a binary variable, we must define a boolean variable. We 
 # add a variable which tells if someone is a forward or not
 small_soccer_no_mid <- small_soccer_no_mid%>%
   mutate(is_forward = Position == 'Forward')
-head(small_soccer_no_mid)
 
 ```
 
-Next, we train a knn classifier. We split the data into train and test data and fit the knn model to the train data. We test on the test data, and record the accuracy, plot the ROC graph, and the boundary for the prediction line. We found that the model was able to classify players extremely accurately on just these two variables, with an ROC score of 0.9711. Looking at the graph, we seem to be pretty accurate, with a small number of false positives and false negatives.
-```{r}
+Next, we train a knn classifier. We split the data into train and test data and fit the knn model to the train data. We test on the test data, and record the accuracy, plot the ROC graph, and the boundary for the prediction line. We found that the model was able to classify players extremely accurately on just these two variables, with an ROC score of 0.967. Looking at the graph, we seem to be pretty accurate, with a small number of false positives and false negatives.
+```{r warning=FALSE}
 #KNN classifier
 
 set.seed(322)
@@ -224,8 +234,8 @@ ROCplot
 calc_auc(ROCplot)$AUC
 ```
 
-Finally, we preformed k-fold cross-validation with the same knn classifer, with 10 folds. Our average AUC was 0.97 across all iterations. This is very good, almost a perfect classifier. We did not see many signs of overfitting, as there is very little variance in the AUC values
-```{r}
+Finally, we preformed k-fold cross-validation with the same knn classifer, with 10 folds. Our average AUC was around 0.967 across all iterations. This is very good, almost a perfect classifier. We did not see many signs of overfitting, as there is very little variance in the AUC values
+```{r warning=FALSE}
 # KNN Classifier with cross-validation
 # Set a seed to get reproducible results
 set.seed(322)

@@ -1,75 +1,3 @@
-<!DOCTYPE html>
-<html lang="en-US">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="author" content="Amal Babu" />
-    
-    <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico">
-    <title>Classification of Soccer Player Position by Numeric Metrics</title>
-    <meta name="generator" content="Hugo 0.98.0" />
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="/css/main.css" />
-    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
-    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
-    
-    <!--[if lt IE 9]>
-			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-		<![endif]-->
-
-    
-  </head>
-
-  <body>
-    <div id="wrap">
-      
-      <nav class="navbar navbar-default">
-  <div class="container">
-    <div class="navbar-header">
-      <a class="navbar-brand" href="/"><i class="fa fa-home"></i></a>
-      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-    </div>
-    <div class="navbar-collapse collapse" id="navbar">
-      <ul class="nav navbar-nav navbar-right">
-      
-        
-        <li><a href="/post/">BLOG</a></li>
-        
-        <li><a href="/projects/">PROJECTS</a></li>
-        
-        <li><a href="/resume/">RESUME</a></li>
-        
-      
-      </ul>
-    </div>
-  </div>
-</nav>
-
-      <div class="container">
-        <div class="blog-post">
-          <h3>
-            <strong><a href="/project/project2/">Classification of Soccer Player Position by Numeric Metrics</a></strong>
-          </h3>
-        </div>
- 
-<div class="blog-title">
-          <h4>
-         January 1, 0001 
-            &nbsp;&nbsp;
-            
-          </h4>
-        </div>
-
-        <div class="panel panel-default">
-          <div class="panel-body">
-            <div class="blogpost">
-              
 
 
 <div id="introduction" class="section level2">
@@ -264,7 +192,7 @@ cor(soccer2, use = &quot;pairwise.complete.obs&quot;) %&gt;%
   scale_fill_gradient2(low=&quot;red&quot;,mid=&quot;white&quot;,high=&quot;blue&quot;) +
   geom_text(aes(label = round(correlation,2)), color = &quot;black&quot;, size = 4) +
   labs(title = &quot;Correlation matrix for Soccer Player Characteristics&quot;, x = &quot;variable 1&quot;, y = &quot;variable 2&quot;)</code></pre>
-<p><img src="/project/project2_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p><img src="/project/SDS%20322%20E%20Project%202%20Markdown_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 <pre class="r"><code>## Univariate/Bivariate Graphs
 # install.packages(psych)
 library(psych)</code></pre>
@@ -280,7 +208,7 @@ library(psych)</code></pre>
              method = &quot;pearson&quot;, 
              hist.col = &quot;magenta&quot;, 
              smooth = FALSE, density = FALSE, ellipses = FALSE)</code></pre>
-<p><img src="/project/project2_files/figure-html/unnamed-chunk-6-2.png" width="672" /></p>
+<p><img src="/project/SDS%20322%20E%20Project%202%20Markdown_files/figure-html/unnamed-chunk-6-2.png" width="672" /></p>
 </div>
 <div id="setting-up-the-clustering" class="section level2">
 <h2>Setting up the Clustering</h2>
@@ -295,7 +223,7 @@ pam_results &lt;- small_soccer%&gt;%
 fviz_cluster(pam_results, data=small_soccer, shape = 0) + 
   geom_point(aes(shape=small_soccer$Position))+
   guides(shape = guide_legend(title = &#39;shape&#39;))</code></pre>
-<p><img src="/project/project2_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p><img src="/project/SDS%20322%20E%20Project%202%20Markdown_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <pre class="r"><code>#get rid of midfielders: new dataset
 small_soccer_no_mid &lt;- small_soccer %&gt;%
   filter(Position != &#39;Midfielder&#39;)</code></pre>
@@ -331,7 +259,7 @@ get_pca_var(pca)$coord %&gt;% as.data.frame</code></pre>
 ## marking         -0.02197456 -0.090965184 -0.10559278 -0.034735720 -0.1032271393
 ## standing_tackle -0.01625546 -0.104162652 -0.10695268 -0.021250461  0.1035399904</code></pre>
 <pre class="r"><code>fviz_eig(pca,addlabels = TRUE)</code></pre>
-<p><img src="/project/project2_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p><img src="/project/SDS%20322%20E%20Project%202%20Markdown_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <pre class="r"><code>head(small_soccer_no_mid)</code></pre>
 <pre><code>## # A tibble: 6 × 12
 ##   crossing finishing dribbling sprint_speed stamina strength aggression vision
@@ -361,7 +289,7 @@ cluster_column_pam &lt;- small_soccer_no_mid %&gt;%
 fviz_cluster(no_mid_pam, data=small_soccer_no_mid, shape = 0) + 
   geom_point(aes(shape=small_soccer_no_mid$Position))+
   guides(shape = guide_legend(title = &#39;shape&#39;))</code></pre>
-<p><img src="/project/project2_files/figure-html/unnamed-chunk-9-1.png" width="672" />
+<p><img src="/project/SDS%20322%20E%20Project%202%20Markdown_files/figure-html/unnamed-chunk-9-1.png" width="672" />
 We also reported some summary statistics about the clusters; for example, for cluster 1 the highest mean was ‘finishing’ while the lowest mean was ‘marking’. For cluster 2 the highest average was ‘strength’ and ‘standing tackle’ while the lowest was ‘finishing’. Finally for cluster 3, the highest average was ‘strenth’ and the lowest was ‘finishing’. While cluster 3 is harder to tell, it is easy to infer that cluster 1 is forwards and cluster 2 is defenders. We also found average width of clusters and the center point of each cluster</p>
 <pre class="r"><code>kable(cluster_column_pam %&gt;%
   group_by(cluster)%&gt;%
@@ -489,7 +417,7 @@ grid %&gt;%
   geom_contour(aes(z = p), breaks = 0.5) + 
   xlim(5, 100) + ylim(1,100) + 
   ggtitle(&quot;Train Set&quot;)</code></pre>
-<p><img src="/project/project2_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p><img src="/project/SDS%20322%20E%20Project%202%20Markdown_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <pre class="r"><code>kNN_soccer &lt;- test %&gt;% 
   mutate(proportion = predict(knn_fit, test)[,1])
 
@@ -497,7 +425,7 @@ grid %&gt;%
 #visualize the ROC plot
 ROCplot &lt;- ggplot(kNN_soccer) + geom_roc(aes(d = is_forward, m = proportion), n.cuts = 0)
 ROCplot</code></pre>
-<p><img src="/project/project2_files/figure-html/unnamed-chunk-12-2.png" width="672" /></p>
+<p><img src="/project/SDS%20322%20E%20Project%202%20Markdown_files/figure-html/unnamed-chunk-12-2.png" width="672" /></p>
 <pre class="r"><code># calculate area under curve
 calc_auc(ROCplot)$AUC</code></pre>
 <pre><code>## [1] 0.9669775</code></pre>
@@ -552,59 +480,3 @@ for(i in 1:k){
 mean(diags_k)</code></pre>
 <pre><code>## [1] 0.9668005</code></pre>
 </div>
-
-            
-        <hr>         <div class="related-posts">
-                <h5>Related Posts</h5>
-                
-              </div> 
-            </div>
-          </div>
-
-   <hr>  <div class="disqus">
-  <div id="disqus_thread"></div>
-  <script type="text/javascript">
-
-    (function() {
-      
-      
-      if (window.location.hostname == "localhost")
-        return;
-
-      var disqus_shortname = '';
-      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    })();
-  </script>
-  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-</div> 
-        </div>
-      </div>
-    </div>
-
-    
-    <footer>
-  <div id="footer">
-    <div class="container">
-      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
-      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
-    </div>
-  </div>
-</footer>
-<div class="footer"></div>
-
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-<script src="/js/docs.min.js"></script>
-<script src="/js/main.js"></script>
-
-<script src="/js/ie10-viewport-bug-workaround.js"></script>
-
-
-    
-  </body>
-</html>

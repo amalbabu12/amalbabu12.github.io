@@ -7,12 +7,12 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language><atom:link href="/project/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>R Project 2 SDS 322E</title>
+      <title>Classification of Soccer Player Position by Numeric Metrics</title>
       <link>/project/project2/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/project/project2/</guid>
-      <description>Loading Packages ## ## Attaching package: &amp;#39;dplyr&amp;#39; ## The following objects are masked from &amp;#39;package:stats&amp;#39;: ## ## filter, lag ## The following objects are masked from &amp;#39;package:base&amp;#39;: ## ## intersect, setdiff, setequal, union ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ── ## ✓ ggplot2 3.3.5 ✓ purrr 0.3.4 ## ✓ tibble 3.1.6 ✓ stringr 1.4.0 ## ✓ tidyr 1.2.0 ✓ forcats 0.5.1 ## ✓ readr 2.1.2 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ── ## x dplyr::filter() masks stats::filter() ## x dplyr::lag() masks stats::lag() ## Loading required package: carData ## ## Attaching package: &amp;#39;car&amp;#39; ## The following object is masked from &amp;#39;package:purrr&amp;#39;: ## ## some ## The following object is masked from &amp;#39;package:dplyr&amp;#39;: ## ## recode ## Welcome!</description>
+      <description>Introduction As both of us are have played soccer for most of our lives, we thought it would be interesting to look at characteristics of professional soccer players around the world. We looked at 3 datasets from Kaggle. The first, called Soccer_Stats looks at numeric metrics in the 2015-2016 Premier League season for each FIFA player, such as overall rating, preferred foot, crossing, finishing, standing tackle, etc. We selected the data to only look at 12 key metrics, namely crossing’, ‘finishing’, ‘dribbling’, ‘sprint_speed’, ‘stamina’, ‘strength’,‘aggression’, ‘vision’, ‘marking’, ‘standing_tackle’, ‘player_name’, ‘Position’, ‘Appearances’ The second dataset called “player_pos” looks at variables such as team, position, appearances, goals, etc.</description>
     </item>
     
     <item>

@@ -1,0 +1,278 @@
+---
+title: "R Project 2 SDS 322E"
+author: "Amal Babu, Ani Thakur"
+date: "5/11/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading Packages
+
+```{r echo=FALSE}
+#install.packages("RSQLite")
+library(RSQLite)
+library(dplyr)
+
+#install.packages("tidyverse")
+library(tidyverse)
+#install.packages("dplyr")
+library(dplyr)
+#install.packages("ggplot2")
+library(ggplot2)
+#install.packages("car")
+library(car)
+#install.packages("ggpubr")
+library(ggpubr)
+library(cluster)
+library(factoextra)
+
+library(caret)
+library(plotROC)
+```
+
+## Connect to Database
+
+```{r}
+connection <- dbConnect(RSQLite::SQLite(), dbname="database.sqlite")
+```
+
+## Gathering Datasets
+
+```{r}
+soccer_stats <- tbl(connection, 'Player_Attributes')
+
+player_pos <- read.csv('Player Stats 2015-16.csv')%>%
+  select(c('Player', 'Position', 'Appearances'))
+
+player_id <- tbl(connection, 'Player')%>%
+  select(c('player_name', 'player_fifa_api_id'))
+```
+
+## Merging Datasets by Player ID
+
+```{r}
+soccer <- left_join(soccer_stats, player_id, by = c('player_fifa_api_id'))
+soccer <- left_join(soccer, player_pos, by=c('player_name'='Player'), copy=TRUE)
+```
+
+## Data Cleaning/Tidying
+
+```{r}
+# select important attributes
+soccer <- soccer %>%
+  select(c('crossing', 'finishing', 'dribbling', 'sprint_speed', 'stamina', 'strength',
+           'aggression', 'vision', 'marking', 'standing_tackle', 'player_name', 'Position', 'Appearances'))
+#save as data frame
+soccer <- as.data.frame(soccer)
+head(soccer)
+
+# convert integer rows to numeric, drop NA's
+soccer <- soccer %>%
+  mutate(across(.cols=where(is.integer), .fns = as.numeric))%>%
+  drop_na()
+
+
+# players have multiple entries b/c fifa updates rankings: keep only one ranking per player,
+# the first ranking
+soccer <- soccer %>%
+  group_by(player_name)%>%
+  filter(row_number() == 1)%>%
+  select(-Appearances)
+
+# create smaller dataset to reduce data points
+small_soccer <- soccer %>% ungroup %>% sample_frac(0.2)
+
+#check how many unique categories there are
+unique(soccer$Position)
+```
+## Exploratory Data Analysis
+We look at relationships between the main variables in our soccer dataset by looking at a correlation matrix as well as univariate/bivariate graphs. The visualizations show that player's "marking" ability is very highly correlated with a player's standing tackle ability. We also find high correlation between a player's "dribbling" and "crossing," "dribbling" and "finishing," and a player's "standing tackle" and "aggression" abilities. We find a low degree of correlation between "vision" and "marking" as well as "finishing" and "strength." The Pairs Panels further shows that  most variables follow a normal distribution,though skewed, except the "marking" and "standing tackle" variables, which follow a u-shaped distribution.
+
+```{r}
+# Correlation Matrix
+soccer2 <- soccer %>%
+  select_if(is.numeric) %>%
+  ungroup()
+soccer2 <- soccer2[-c(1)]           
+cor(soccer2, use = "pairwise.complete.obs") %>%
+  as.data.frame %>%
+  rownames_to_column %>%
+  pivot_longer(-1, names_to = "other_var", values_to = "correlation") %>%
+  ggplot(aes(rowname, other_var, fill = correlation)) +
+  geom_tile() +
+  scale_fill_gradient2(low="red",mid="white",high="blue") +
+  geom_text(aes(label = round(correlation,2)), color = "black", size = 4) +
+  labs(title = "Correlation matrix for Soccer Player Characteristics", x = "variable 1", y = "variable 2")
+
+## Univariate/Bivariate Graphs
+# install.packages(psych)
+library(psych)
+pairs.panels(soccer, 
+             method = "pearson", 
+             hist.col = "magenta", 
+             smooth = FALSE, density = FALSE, ellipses = FALSE)
+```
+## Setting up the Clustering
+Initially we set up pam for the small_soccer dataset. However, we found that including Midfielders was a problem, as midfielders have attributes of both defenders and attackers, and are this hard to classify. Our final dataset was created by dropping all midfielders and classifying just forwards, defenders, and goalkeepers.
+```{r}
+#PAM clustering
+pam_results <- small_soccer%>%
+  ungroup()%>%
+  select_if(is.numeric)%>%
+  scale()%>%
+  pam(k=4)
+
+fviz_cluster(pam_results, data=small_soccer, shape = 0) + 
+  geom_point(aes(shape=small_soccer$Position))+
+  guides(shape = guide_legend(title = 'shape'))
+
+#get rid of midfielders: new dataset
+small_soccer_no_mid <- small_soccer %>%
+  filter(Position != 'Midfielder')
+```
+
+## Dimensionality Reduction
+We inspected the principal components of the PCA algorithm and found that the "crossing," "dribbling," and "stamina" variables contributed the most variance to Dimension 1, which accounted for 52.6% of the explained variance. Dimension 2 accounted for 25.4% of the explained variance, and we found that the "marking," "standing tackle," and "finishing" variables contributed the most variance to this dimension. We retain PC 1 and PC2 to account for 78% of the total variance in the dataset. We identify low PC rates to have low levels of variance, and thus less distinguishing features across the clusters. We find the opposite to be true as well. 
+```{r}
+pca <- small_soccer_no_mid %>%
+  select_if(is.numeric)%>%
+  scale()%>%
+  prcomp
+get_pca_var(pca)$coord %>% as.data.frame
+
+fviz_eig(pca,addlabels = TRUE)
+head(small_soccer_no_mid)
+```
+## Clustering Visualizations
+We performed PAM clustering on the positionality of the soccer player's, including whether they were a goalkeeper, defender, midfielder, or forward based on all the other attributes in the dataset. After initially running the algorithm we found that midfielders were hard to cluster because they have attributes of all players. The second time we ran the algorithm without the midfielders we found that the clusters were much easier to visualize. 
+```{r}
+small_soccer_no_mid <- small_soccer %>%
+  filter(Position != 'Midfielder')
+no_mid_pam <- small_soccer_no_mid %>%
+  select_if(is.numeric)%>%
+  scale()%>%
+  pam(k=3)
+
+cluster_column_pam <- small_soccer_no_mid %>%
+  mutate(cluster = as.factor(no_mid_pam$clustering))
+fviz_cluster(no_mid_pam, data=small_soccer_no_mid, shape = 0) + 
+  geom_point(aes(shape=small_soccer_no_mid$Position))+
+  guides(shape = guide_legend(title = 'shape'))
+
+no_mid_pam$silinfo$avg.width
+no_mid_pam$medoids
+```
+## Classification and Cross-Validation
+In order to do predict a binary variable, we must define a boolean variable. We decided to try to classify whether a player was a forward or not based on their stamina and finishing ratings. We appended a new new logical variable to our dataset representing whether that player is a forward or not.
+
+```{r}
+# add a variable which tells if someone is a forward or not
+small_soccer_no_mid <- small_soccer_no_mid%>%
+  mutate(is_forward = Position == 'Forward')
+head(small_soccer_no_mid)
+
+```
+
+Next, we train a knn classifier. We split the data into train and test data and fit the knn model to the train data. We test on the test data, and record the accuracy, plot the ROC graph, and the boundary for the prediction line. We found that the model was able to classify players extremely accurately on just these two variables, with an ROC score of 0.9711. Looking at the graph, we seem to be pretty accurate, with a small number of false positives and false negatives.
+```{r}
+#KNN classifier
+
+set.seed(322)
+
+# Split data into train and test sets
+train <- small_soccer_no_mid %>% sample_frac(0.8)
+test <- small_soccer_no_mid %>% anti_join(train, by = "player_name")
+
+# Fit the model on the train data
+knn_fit <- knn3(factor(is_forward == 1, 
+                       levels = c(TRUE,FALSE)) ~ stamina + finishing,
+                data = train, 
+                k = 5)
+
+# Make a grid for the graph to layout the contour geom
+grid <- data.frame(expand.grid(stamina = seq(min(small_soccer_no_mid$stamina),
+                                            max(small_soccer_no_mid$stamina),
+                                            length.out = 100),
+                               finishing = seq(min(small_soccer_no_mid$finishing),
+                                        max(small_soccer_no_mid$finishing),
+                                        length.out = 100)))
+
+# Use this grid to predict legendary status
+grid %>% 
+  mutate(p = predict(knn_fit, grid)[,1]) %>% 
+  ggplot(aes(stamina, finishing)) + 
+  # Only display data in the train set
+  geom_point(data = train, 
+             aes(stamina, finishing, color = as.factor(is_forward))) + 
+  # Draw the decision boundary
+  geom_contour(aes(z = p), breaks = 0.5) + 
+  xlim(5, 100) + ylim(1,100) + 
+  ggtitle("Train Set")
+
+kNN_soccer <- test %>% 
+  mutate(proportion = predict(knn_fit, test)[,1])
+
+
+#visualize the ROC plot
+ROCplot <- ggplot(kNN_soccer) + geom_roc(aes(d = is_forward, m = proportion), n.cuts = 0)
+ROCplot
+
+# calculate area under curve
+calc_auc(ROCplot)$AUC
+```
+
+Finally, we preformed k-fold cross-validation with the same knn classifer, with 10 folds. Our average AUC was 0.97 across all iterations. This is very good, almost a perfect classifier. We did not see many signs of overfitting, as there is very little variance in the AUC values
+```{r}
+# KNN Classifier with cross-validation
+# Set a seed to get reproducible results
+set.seed(322)
+
+k = 10
+
+# Randomly order rows in the dataset
+data <- small_soccer_no_mid[sample(nrow(small_soccer_no_mid)), ] 
+
+# Create k folds from the dataset
+folds <- cut(seq(1:nrow(data)), breaks = k, labels = FALSE) 
+
+# Use a for loop to get diagnostics for each test set
+diags_k <- NULL
+
+for(i in 1:k){
+  # Create training and test sets
+  train <- data[folds != i, ] # all observations except in fold i
+  test <- data[folds == i, ]  # observations in fold i
+  
+  # Train model on training set (all but fold i)
+  fit <- glm(is_forward ~ stamina + finishing, 
+             data = train, family = "binomial")
+  
+  # Test model on test set (fold i)
+  df <- data.frame(
+    prob = predict(fit, newdata = test, type = "response"),
+    y = test$is_forward)
+  
+  knn_fit <- knn3(factor(is_forward == 1, 
+                         levels = c(TRUE,FALSE)) ~ stamina + finishing,
+                  data = train, 
+                  k = 5)
+  
+  
+  kNN_soccer <- test %>% 
+    mutate(proportion = predict(knn_fit, test)[,1])
+  
+  
+  # Consider the ROC curve for the test dataset
+  ROCplot <- ggplot(kNN_soccer) + geom_roc(aes(d = is_forward, m = proportion), n.cuts = 0)
+  
+  
+  # Get diagnostics for fold i (AUC)
+  diags_k[i] <- calc_auc(ROCplot)$AUC
+}
+
+mean(diags_k)
+
+```

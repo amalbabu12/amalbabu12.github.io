@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Amal Babu" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico">
+    <title>R Project 2 SDS 322E</title>
+    <meta name="generator" content="Hugo 0.98.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="/"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="/post/">BLOG</a></li>
+        
+        <li><a href="/projects/">PROJECTS</a></li>
+        
+        <li><a href="/resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="/project/project2/">R Project 2 SDS 322E</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="loading-packages" class="section level2">
+<h2>Loading Packages</h2>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.5     ✓ purrr   0.3.4
+## ✓ tibble  3.1.6     ✓ stringr 1.4.0
+## ✓ tidyr   1.2.0     ✓ forcats 0.5.1
+## ✓ readr   2.1.2</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre><code>## Loading required package: carData</code></pre>
+<pre><code>## 
+## Attaching package: &#39;car&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     some</code></pre>
+<pre><code>## The following object is masked from &#39;package:dplyr&#39;:
+## 
+##     recode</code></pre>
+<pre><code>## Welcome! Want to learn more? See two factoextra-related books at https://goo.gl/ve3WBa</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## 
+## Attaching package: &#39;caret&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     lift</code></pre>
+</div>
+<div id="connect-to-database" class="section level2">
+<h2>Connect to Database</h2>
+<pre class="r"><code>connection &lt;- dbConnect(RSQLite::SQLite(), dbname=&quot;database.sqlite&quot;)</code></pre>
+</div>
+<div id="gathering-datasets" class="section level2">
+<h2>Gathering Datasets</h2>
+<pre class="r"><code>soccer_stats &lt;- tbl(connection, &#39;Player_Attributes&#39;)
+
+player_pos &lt;- read.csv(&#39;Player Stats 2015-16.csv&#39;)%&gt;%
+  select(c(&#39;Player&#39;, &#39;Position&#39;, &#39;Appearances&#39;))
+
+player_id &lt;- tbl(connection, &#39;Player&#39;)%&gt;%
+  select(c(&#39;player_name&#39;, &#39;player_fifa_api_id&#39;))</code></pre>
+</div>
+<div id="merging-datasets-by-player-id" class="section level2">
+<h2>Merging Datasets by Player ID</h2>
+<pre class="r"><code>soccer &lt;- left_join(soccer_stats, player_id, by = c(&#39;player_fifa_api_id&#39;))
+soccer &lt;- left_join(soccer, player_pos, by=c(&#39;player_name&#39;=&#39;Player&#39;), copy=TRUE)</code></pre>
+</div>
+<div id="data-cleaningtidying" class="section level2">
+<h2>Data Cleaning/Tidying</h2>
+<pre class="r"><code># select important attributes
+soccer &lt;- soccer %&gt;%
+  select(c(&#39;crossing&#39;, &#39;finishing&#39;, &#39;dribbling&#39;, &#39;sprint_speed&#39;, &#39;stamina&#39;, &#39;strength&#39;,
+           &#39;aggression&#39;, &#39;vision&#39;, &#39;marking&#39;, &#39;standing_tackle&#39;, &#39;player_name&#39;, &#39;Position&#39;, &#39;Appearances&#39;))
+#save as data frame
+soccer &lt;- as.data.frame(soccer)
+head(soccer)</code></pre>
+<pre><code>##   crossing finishing dribbling sprint_speed stamina strength aggression vision
+## 1       49        44        51           64      54       76         71     54
+## 2       49        44        51           64      54       76         71     54
+## 3       49        44        51           64      54       76         63     54
+## 4       48        43        50           64      54       76         62     53
+## 5       48        43        50           64      54       76         62     53
+## 6       80        53        73           78      79       56         68     66
+##   marking standing_tackle        player_name Position Appearances
+## 1      65              69 Aaron Appindangoye     &lt;NA&gt;          NA
+## 2      65              69 Aaron Appindangoye     &lt;NA&gt;          NA
+## 3      65              66 Aaron Appindangoye     &lt;NA&gt;          NA
+## 4      62              63 Aaron Appindangoye     &lt;NA&gt;          NA
+## 5      62              63 Aaron Appindangoye     &lt;NA&gt;          NA
+## 6      76              75    Aaron Cresswell Defender          37</code></pre>
+<pre class="r"><code># convert integer rows to numeric, drop NA&#39;s
+soccer &lt;- soccer %&gt;%
+  mutate(across(.cols=where(is.integer), .fns = as.numeric))%&gt;%
+  drop_na()
+
+
+# players have multiple entries b/c fifa updates rankings: keep only one ranking per player,
+# the first ranking
+soccer &lt;- soccer %&gt;%
+  group_by(player_name)%&gt;%
+  filter(row_number() == 1)%&gt;%
+  select(-Appearances)
+
+# create smaller dataset to reduce data points
+small_soccer &lt;- soccer %&gt;% ungroup %&gt;% sample_frac(0.2)
+
+#check how many unique categories there are
+unique(soccer$Position)</code></pre>
+<pre><code>## [1] &quot;Defender&quot;   &quot;Midfielder&quot; &quot;Goalkeeper&quot; &quot;Forward&quot;</code></pre>
+</div>
+<div id="exploratory-data-analysis" class="section level2">
+<h2>Exploratory Data Analysis</h2>
+<p>We look at relationships between the main variables in our soccer dataset by looking at a correlation matrix as well as univariate/bivariate graphs. The visualizations show that player’s “marking” ability is very highly correlated with a player’s standing tackle ability. We also find high correlation between a player’s “dribbling” and “crossing,” “dribbling” and “finishing,” and a player’s “standing tackle” and “aggression” abilities. We find a low degree of correlation between “vision” and “marking” as well as “finishing” and “strength.” The Pairs Panels further shows that most variables follow a normal distribution,though skewed, except the “marking” and “standing tackle” variables, which follow a u-shaped distribution.</p>
+<pre class="r"><code># Correlation Matrix
+soccer2 &lt;- soccer %&gt;%
+  select_if(is.numeric) %&gt;%
+  ungroup()
+soccer2 &lt;- soccer2[-c(1)]           
+cor(soccer2, use = &quot;pairwise.complete.obs&quot;) %&gt;%
+  as.data.frame %&gt;%
+  rownames_to_column %&gt;%
+  pivot_longer(-1, names_to = &quot;other_var&quot;, values_to = &quot;correlation&quot;) %&gt;%
+  ggplot(aes(rowname, other_var, fill = correlation)) +
+  geom_tile() +
+  scale_fill_gradient2(low=&quot;red&quot;,mid=&quot;white&quot;,high=&quot;blue&quot;) +
+  geom_text(aes(label = round(correlation,2)), color = &quot;black&quot;, size = 4) +
+  labs(title = &quot;Correlation matrix for Soccer Player Characteristics&quot;, x = &quot;variable 1&quot;, y = &quot;variable 2&quot;)</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<pre class="r"><code>## Univariate/Bivariate Graphs
+# install.packages(psych)
+library(psych)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;psych&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:car&#39;:
+## 
+##     logit</code></pre>
+<pre><code>## The following objects are masked from &#39;package:ggplot2&#39;:
+## 
+##     %+%, alpha</code></pre>
+<pre class="r"><code>pairs.panels(soccer, 
+             method = &quot;pearson&quot;, 
+             hist.col = &quot;magenta&quot;, 
+             smooth = FALSE, density = FALSE, ellipses = FALSE)</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-6-2.png" width="672" />
+## Setting up the Clustering
+Initially we set up pam for the small_soccer dataset. However, we found that including Midfielders was a problem, as midfielders have attributes of both defenders and attackers, and are this hard to classify. Our final dataset was created by dropping all midfielders and classifying just forwards, defenders, and goalkeepers.</p>
+<pre class="r"><code>#PAM clustering
+pam_results &lt;- small_soccer%&gt;%
+  ungroup()%&gt;%
+  select_if(is.numeric)%&gt;%
+  scale()%&gt;%
+  pam(k=4)
+
+fviz_cluster(pam_results, data=small_soccer, shape = 0) + 
+  geom_point(aes(shape=small_soccer$Position))+
+  guides(shape = guide_legend(title = &#39;shape&#39;))</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<pre class="r"><code>#get rid of midfielders: new dataset
+small_soccer_no_mid &lt;- small_soccer %&gt;%
+  filter(Position != &#39;Midfielder&#39;)</code></pre>
+</div>
+<div id="dimensionality-reduction" class="section level2">
+<h2>Dimensionality Reduction</h2>
+<p>We inspected the principal components of the PCA algorithm and found that the “crossing,” “dribbling,” and “stamina” variables contributed the most variance to Dimension 1, which accounted for 52.6% of the explained variance. Dimension 2 accounted for 25.4% of the explained variance, and we found that the “marking,” “standing tackle,” and “finishing” variables contributed the most variance to this dimension. We retain PC 1 and PC2 to account for 78% of the total variance in the dataset. We identify low PC rates to have low levels of variance, and thus less distinguishing features across the clusters. We find the opposite to be true as well.</p>
+<pre class="r"><code>pca &lt;- small_soccer_no_mid %&gt;%
+  select_if(is.numeric)%&gt;%
+  scale()%&gt;%
+  prcomp
+get_pca_var(pca)$coord %&gt;% as.data.frame</code></pre>
+<pre><code>##                     Dim.1       Dim.2       Dim.3        Dim.4        Dim.5
+## crossing        0.8850806 -0.15985380  0.24349638  0.059039477 -0.034122598
+## finishing       0.6414027 -0.60785071 -0.33448587 -0.004568508 -0.257985323
+## dribbling       0.8899937 -0.36595377  0.02103881 -0.008421884 -0.107537239
+## sprint_speed    0.7787668 -0.32538670  0.18012910 -0.396499679  0.260481005
+## stamina         0.9126990  0.03811286  0.05674196 -0.148690954 -0.005383559
+## strength        0.3203524  0.48917777 -0.77685458 -0.079976300  0.160684834
+## aggression      0.7804714  0.48590543 -0.17003643 -0.011669117 -0.147072498
+## vision          0.6650615 -0.50387465 -0.09123852  0.476016616  0.239537807
+## marking         0.5456479  0.78336736  0.22244500  0.103123985  0.003108734
+## standing_tackle 0.5859806  0.76349326  0.18620633  0.110140422 -0.007257412
+##                       Dim.6        Dim.7       Dim.8        Dim.9        Dim.10
+## crossing         0.32364262 -0.017878022  0.12686803 -0.077258628  3.181382e-03
+## finishing       -0.06656728 -0.044555468 -0.13588114 -0.125625960  5.046909e-05
+## dribbling        0.07009967 -0.060541633 -0.09499558  0.210431068 -5.161709e-03
+## sprint_speed    -0.08465083 -0.145341540 -0.02206319 -0.036772284  2.842346e-03
+## stamina         -0.07246368  0.366745878  0.02003060  0.002586355 -2.989765e-03
+## strength         0.14527790  0.010148856 -0.03278978  0.008647491 -1.412767e-03
+## aggression      -0.16558013 -0.117390470  0.24977270  0.022146833 -2.685994e-03
+## vision          -0.10337983  0.009314612  0.02675304 -0.004079864 -1.551914e-03
+## marking         -0.01468839 -0.042343176 -0.12914519 -0.034803535 -9.262552e-02
+## standing_tackle -0.02495266 -0.030683425 -0.12534382 -0.017748514  9.621980e-02</code></pre>
+<pre class="r"><code>fviz_eig(pca,addlabels = TRUE)</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<pre class="r"><code>head(small_soccer_no_mid)</code></pre>
+<pre><code>## # A tibble: 6 × 12
+##   crossing finishing dribbling sprint_speed stamina strength aggression vision
+##      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;  &lt;dbl&gt;
+## 1       20        15        13           34      25       49         20     31
+## 2       71        48        79           79      74       77         68     55
+## 3       64        22        63           73      68       62         68     44
+## 4       66        78        78           78      69       79         66     69
+## 5       61        63        72           84      66       55         70     51
+## 6       50        25        48           61      58       74         49     39
+## # … with 4 more variables: marking &lt;dbl&gt;, standing_tackle &lt;dbl&gt;,
+## #   player_name &lt;chr&gt;, Position &lt;chr&gt;</code></pre>
+</div>
+<div id="clustering-visualizations" class="section level2">
+<h2>Clustering Visualizations</h2>
+<p>We performed PAM clustering on the positionality of the soccer player’s, including whether they were a goalkeeper, defender, midfielder, or forward based on all the other attributes in the dataset. After initially running the algorithm we found that midfielders were hard to cluster because they have attributes of all players. The second time we ran the algorithm without the midfielders we found that the clusters were much easier to visualize.</p>
+<pre class="r"><code>small_soccer_no_mid &lt;- small_soccer %&gt;%
+  filter(Position != &#39;Midfielder&#39;)
+no_mid_pam &lt;- small_soccer_no_mid %&gt;%
+  select_if(is.numeric)%&gt;%
+  scale()%&gt;%
+  pam(k=3)
+
+cluster_column_pam &lt;- small_soccer_no_mid %&gt;%
+  mutate(cluster = as.factor(no_mid_pam$clustering))
+fviz_cluster(no_mid_pam, data=small_soccer_no_mid, shape = 0) + 
+  geom_point(aes(shape=small_soccer_no_mid$Position))+
+  guides(shape = guide_legend(title = &#39;shape&#39;))</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<pre class="r"><code>no_mid_pam$silinfo$avg.width</code></pre>
+<pre><code>## [1] 0.3940002</code></pre>
+<pre class="r"><code>no_mid_pam$medoids</code></pre>
+<pre><code>##        crossing  finishing  dribbling sprint_speed    stamina   strength
+## [1,] -1.7356668 -1.3028377 -1.9310369   -1.3450518 -1.6744150 -0.3478590
+## [2,]  0.1431822 -0.4939421  0.5331083    0.3677511 -0.1151714  0.2112569
+## [3,]  0.5189520  1.4833582  0.7700454    0.7630133  0.1343076  0.2112569
+##      aggression      vision    marking standing_tackle
+## [1,] -1.9560290 -1.16216049 -1.3616519      -1.5057261
+## [2,]  0.5171481  0.06181705  0.9188094       0.9025936
+## [3,]  0.3110500  0.67380582 -1.1041805      -0.6535514</code></pre>
+</div>
+<div id="classification-and-cross-validation" class="section level2">
+<h2>Classification and Cross-Validation</h2>
+<p>In order to do predict a binary variable, we must define a boolean variable. We decided to try to classify whether a player was a forward or not based on their stamina and finishing ratings. We appended a new new logical variable to our dataset representing whether that player is a forward or not.</p>
+<pre class="r"><code># add a variable which tells if someone is a forward or not
+small_soccer_no_mid &lt;- small_soccer_no_mid%&gt;%
+  mutate(is_forward = Position == &#39;Forward&#39;)
+head(small_soccer_no_mid)</code></pre>
+<pre><code>## # A tibble: 6 × 13
+##   crossing finishing dribbling sprint_speed stamina strength aggression vision
+##      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;  &lt;dbl&gt;
+## 1       20        15        13           34      25       49         20     31
+## 2       71        48        79           79      74       77         68     55
+## 3       64        22        63           73      68       62         68     44
+## 4       66        78        78           78      69       79         66     69
+## 5       61        63        72           84      66       55         70     51
+## 6       50        25        48           61      58       74         49     39
+## # … with 5 more variables: marking &lt;dbl&gt;, standing_tackle &lt;dbl&gt;,
+## #   player_name &lt;chr&gt;, Position &lt;chr&gt;, is_forward &lt;lgl&gt;</code></pre>
+<p>Next, we train a knn classifier. We split the data into train and test data and fit the knn model to the train data. We test on the test data, and record the accuracy, plot the ROC graph, and the boundary for the prediction line. We found that the model was able to classify players extremely accurately on just these two variables, with an ROC score of 0.9711. Looking at the graph, we seem to be pretty accurate, with a small number of false positives and false negatives.</p>
+<pre class="r"><code>#KNN classifier
+
+set.seed(322)
+
+# Split data into train and test sets
+train &lt;- small_soccer_no_mid %&gt;% sample_frac(0.8)
+test &lt;- small_soccer_no_mid %&gt;% anti_join(train, by = &quot;player_name&quot;)
+
+# Fit the model on the train data
+knn_fit &lt;- knn3(factor(is_forward == 1, 
+                       levels = c(TRUE,FALSE)) ~ stamina + finishing,
+                data = train, 
+                k = 5)
+
+# Make a grid for the graph to layout the contour geom
+grid &lt;- data.frame(expand.grid(stamina = seq(min(small_soccer_no_mid$stamina),
+                                            max(small_soccer_no_mid$stamina),
+                                            length.out = 100),
+                               finishing = seq(min(small_soccer_no_mid$finishing),
+                                        max(small_soccer_no_mid$finishing),
+                                        length.out = 100)))
+
+# Use this grid to predict legendary status
+grid %&gt;% 
+  mutate(p = predict(knn_fit, grid)[,1]) %&gt;% 
+  ggplot(aes(stamina, finishing)) + 
+  # Only display data in the train set
+  geom_point(data = train, 
+             aes(stamina, finishing, color = as.factor(is_forward))) + 
+  # Draw the decision boundary
+  geom_contour(aes(z = p), breaks = 0.5) + 
+  xlim(5, 100) + ylim(1,100) + 
+  ggtitle(&quot;Train Set&quot;)</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<pre class="r"><code>kNN_soccer &lt;- test %&gt;% 
+  mutate(proportion = predict(knn_fit, test)[,1])
+
+
+#visualize the ROC plot
+ROCplot &lt;- ggplot(kNN_soccer) + geom_roc(aes(d = is_forward, m = proportion), n.cuts = 0)
+ROCplot</code></pre>
+<pre><code>## Warning in verify_d(data$d): D not labeled 0/1, assuming FALSE = 0 and TRUE = 1!</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-11-2.png" width="672" /></p>
+<pre class="r"><code># calculate area under curve
+calc_auc(ROCplot)$AUC</code></pre>
+<pre><code>## Warning in verify_d(data$d): D not labeled 0/1, assuming FALSE = 0 and TRUE = 1!</code></pre>
+<pre><code>## [1] 0.8979701</code></pre>
+<p>Finally, we preformed k-fold cross-validation with the same knn classifer, with 10 folds. Our average AUC was 0.97 across all iterations. This is very good, almost a perfect classifier. We did not see many signs of overfitting, as there is very little variance in the AUC values</p>
+<pre class="r"><code># KNN Classifier with cross-validation
+# Set a seed to get reproducible results
+set.seed(322)
+
+k = 10
+
+# Randomly order rows in the dataset
+data &lt;- small_soccer_no_mid[sample(nrow(small_soccer_no_mid)), ] 
+
+# Create k folds from the dataset
+folds &lt;- cut(seq(1:nrow(data)), breaks = k, labels = FALSE) 
+
+# Use a for loop to get diagnostics for each test set
+diags_k &lt;- NULL
+
+for(i in 1:k){
+  # Create training and test sets
+  train &lt;- data[folds != i, ] # all observations except in fold i
+  test &lt;- data[folds == i, ]  # observations in fold i
+  
+  # Train model on training set (all but fold i)
+  fit &lt;- glm(is_forward ~ stamina + finishing, 
+             data = train, family = &quot;binomial&quot;)
+  
+  # Test model on test set (fold i)
+  df &lt;- data.frame(
+    prob = predict(fit, newdata = test, type = &quot;response&quot;),
+    y = test$is_forward)
+  
+  knn_fit &lt;- knn3(factor(is_forward == 1, 
+                         levels = c(TRUE,FALSE)) ~ stamina + finishing,
+                  data = train, 
+                  k = 5)
+  
+  
+  kNN_soccer &lt;- test %&gt;% 
+    mutate(proportion = predict(knn_fit, test)[,1])
+  
+  
+  # Consider the ROC curve for the test dataset
+  ROCplot &lt;- ggplot(kNN_soccer) + geom_roc(aes(d = is_forward, m = proportion), n.cuts = 0)
+  
+  
+  # Get diagnostics for fold i (AUC)
+  diags_k[i] &lt;- calc_auc(ROCplot)$AUC
+}</code></pre>
+<pre><code>## Warning in verify_d(data$d): D not labeled 0/1, assuming FALSE = 0 and TRUE = 1!
+
+## Warning in verify_d(data$d): D not labeled 0/1, assuming FALSE = 0 and TRUE = 1!
+
+## Warning in verify_d(data$d): D not labeled 0/1, assuming FALSE = 0 and TRUE = 1!
+
+## Warning in verify_d(data$d): D not labeled 0/1, assuming FALSE = 0 and TRUE = 1!
+
+## Warning in verify_d(data$d): D not labeled 0/1, assuming FALSE = 0 and TRUE = 1!
+
+## Warning in verify_d(data$d): D not labeled 0/1, assuming FALSE = 0 and TRUE = 1!
+
+## Warning in verify_d(data$d): D not labeled 0/1, assuming FALSE = 0 and TRUE = 1!
+
+## Warning in verify_d(data$d): D not labeled 0/1, assuming FALSE = 0 and TRUE = 1!
+
+## Warning in verify_d(data$d): D not labeled 0/1, assuming FALSE = 0 and TRUE = 1!
+
+## Warning in verify_d(data$d): D not labeled 0/1, assuming FALSE = 0 and TRUE = 1!</code></pre>
+<pre class="r"><code>mean(diags_k)</code></pre>
+<pre><code>## [1] 0.9640898</code></pre>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="/js/docs.min.js"></script>
+<script src="/js/main.js"></script>
+
+<script src="/js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

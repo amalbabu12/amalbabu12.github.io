@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Projects on Amal Babu</title>
+    <link>/project/</link>
+    <description>Recent content in Projects on Amal Babu</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language><atom:link href="/project/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>R Project 2 SDS 322E</title>
+      <link>/project/project2/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project2/</guid>
+      <description>Loading Packages ## ## Attaching package: &amp;#39;dplyr&amp;#39; ## The following objects are masked from &amp;#39;package:stats&amp;#39;: ## ## filter, lag ## The following objects are masked from &amp;#39;package:base&amp;#39;: ## ## intersect, setdiff, setequal, union ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ── ## ✓ ggplot2 3.3.5 ✓ purrr 0.3.4 ## ✓ tibble 3.1.6 ✓ stringr 1.4.0 ## ✓ tidyr 1.2.0 ✓ forcats 0.5.1 ## ✓ readr 2.1.2 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ── ## x dplyr::filter() masks stats::filter() ## x dplyr::lag() masks stats::lag() ## Loading required package: carData ## ## Attaching package: &amp;#39;car&amp;#39; ## The following object is masked from &amp;#39;package:purrr&amp;#39;: ## ## some ## The following object is masked from &amp;#39;package:dplyr&amp;#39;: ## ## recode ## Welcome!</description>
+    </item>
+    
+    <item>
+      <title>The Correlation Between Weather and Crime</title>
+      <link>/project/project1/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project1/</guid>
+      <description>Introduction I have used the National Oceanic and Atmospheric Association(NOAA) weather dataset and Chicago Crime Dataset from the City of Chicago. I chose these because they both have daily entries, and I was able to merge the datasets by day. These will allow to me find a day by day relationship between weather and crime, as I felt that monthly was too far apart to find meaningful relationships. I also liked the crime dataset because it labels the type of each crime.</description>
+    </item>
+    
+  </channel>
+</rss>

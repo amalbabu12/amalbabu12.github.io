@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Amal Babu" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico">
+    <title>The Correlation Between Weather and Crime</title>
+    <meta name="generator" content="Hugo 0.98.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="/"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="/post/">BLOG</a></li>
+        
+        <li><a href="/projects/">PROJECTS</a></li>
+        
+        <li><a href="/resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="/project/project1/">The Correlation Between Weather and Crime</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+<script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
+<link href="/rmarkdown-libs/lightable/lightable.css" rel="stylesheet" />
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>I have used the National Oceanic and Atmospheric Association(NOAA) weather dataset and Chicago Crime Dataset from the City of Chicago. I chose these because they both have daily entries, and I was able to merge the datasets by day. These will allow to me find a day by day relationship between weather and crime, as I felt that monthly was too far apart to find meaningful relationships. I also liked the crime dataset because it labels the type of each crime. This way I am able to investigate the relationship between weather and different types of crimes.</p>
+</div>
+<div id="getting-a-weather-dataset" class="section level2">
+<h2>Getting a Weather Dataset</h2>
+<p>I used the Weather Dataset from the National Oceanic and Atmospheric Association(NOAA). I was able to find a dataset for daily weather reports in Chicago from 1949 to 2009, which I filtered down to only the 2008 reports. I only keps values such as precipitation, snow, and temperatur max and mins, along with the key values year, month, and day.</p>
+<pre class="r"><code>weather &lt;- read.dly(&quot;ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/all/USW00094846.dly&quot;)
+
+# keep only 2008 entries
+weather_2008 &lt;- weather %&gt;%
+  filter(YEAR == 2008) 
+
+# Select variables of interest
+weather_2008 &lt;- weather_2008 %&gt;%
+  select(YEAR, MONTH, DAY, PRCP.VALUE, SNOW.VALUE,SNWD.VALUE, TMAX.VALUE, TMIN.VALUE)
+
+# check out the dataset
+save(weather_2008, file=&#39;weather.RData&#39;)
+rm(weather)</code></pre>
+</div>
+<div id="gathering-the-chicago-crime-dataset" class="section level2">
+<h2>Gathering the Chicago Crime Dataset</h2>
+<p>I used the official dataset from the City of Chicago, recording all reported crimes in 2008. I then split the date into year, month, and day to prepare for merging with the weather datset. Finally, I only kept the variables year, month, day, as well as the type of crime commited.</p>
+<pre class="r"><code># Download one year of crime data from the open data portal of city of Chicago
+# NOTE: This may take a while depening on the strength of your internet connection
+# First I ran read_csv() to find the default col_types() then I updated them to this:
+type=cols( `CASE#` = col_character(),
+           `DATE  OF OCCURRENCE` = col_datetime(format=&quot;%m/%d/%Y %I:%M:%S %p&quot;),
+           BLOCK = col_factor(),
+           IUCR = col_factor(),
+           `PRIMARY DESCRIPTION` = col_factor(),
+           `SECONDARY DESCRIPTION` = col_factor(),
+           `LOCATION DESCRIPTION` = col_factor(),
+           ARREST = col_factor(),
+           DOMESTIC = col_factor(),
+           BEAT = col_factor(),
+           WARD = col_factor(),
+           `FBI CD` = col_factor(),
+           `X COORDINATE` = col_double(),
+           `Y COORDINATE` = col_double(),
+           LATITUDE = col_double(),
+           LONGITUDE = col_double(),
+           LOCATION = col_character()
+)
+
+# Read in data
+crime_raw &lt;- read_csv(&#39;Crimes_-_2008.csv&#39;, na=&#39;&#39;,col_types = type)
+
+# Fix column names
+names(crime_raw)&lt;-str_to_lower(names(crime_raw)) %&gt;%
+  str_replace_all(&quot; &quot;,&quot;_&quot;) %&gt;%
+  str_replace_all(&quot;__&quot;,&quot;_&quot;) %&gt;%
+  str_replace_all(&quot;#&quot;,&quot;_num&quot;)
+
+crime_2008 &lt;- crime_raw %&gt;%
+  separate(date, c(&#39;MONTH&#39;, &#39;DAY&#39;, &#39;YEAR&#39;), sep = c(&#39;/&#39;))
+
+crime_2008 &lt;- crime_2008 %&gt;%
+  separate(YEAR, c(&#39;YEAR&#39;, &#39;TIME&#39;), sep = c(&#39; &#39;))
+
+crime_2008$YEAR &lt;- as.numeric(crime_2008$YEAR)
+crime_2008$MONTH &lt;- as.numeric(crime_2008$MONTH)
+crime_2008$DAY &lt;- as.numeric(crime_2008$DAY)
+             
+crime_2008 &lt;- crime_2008 %&gt;% select(YEAR, MONTH, DAY, primary_type)
+
+crime_2008 &lt;- crime_2008 %&gt;% arrange(YEAR)
+
+save(crime_2008, file=&#39;crime.RData&#39;)
+
+rm(crime_raw)</code></pre>
+</div>
+<div id="merging-the-crime-and-weather-datasets" class="section level2">
+<h2>Merging the Crime and Weather Datasets</h2>
+<p>Next, I merged the two datasets by key ID’s Year, Month, Day. First, I inspected the two datasets. The crime dataset had 427142 observations, while weather_2008 had 366 (one for each day as 2008 was a leap year). Performing an antijoin on the two resulted in a table with 0 observations, meaning that there were no mismatches between the datasets!. I performed a left join on the crime dataset with the weather dataset, resulting in a table with the same number of observations as the crime datasets since no rows had to be dropped. Finally, I reverted to a singular date columm to make plotting a bit easier.</p>
+<pre class="r"><code>## inspect weather dataset
+
+load(&#39;weather.RData&#39;)
+load(&#39;crime.RData&#39;)
+head(weather_2008)%&gt;%
+  kbl() %&gt;%
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+YEAR
+</th>
+<th style="text-align:right;">
+MONTH
+</th>
+<th style="text-align:right;">
+DAY
+</th>
+<th style="text-align:right;">
+PRCP.VALUE
+</th>
+<th style="text-align:right;">
+SNOW.VALUE
+</th>
+<th style="text-align:right;">
+SNWD.VALUE
+</th>
+<th style="text-align:right;">
+TMAX.VALUE
+</th>
+<th style="text-align:right;">
+TMIN.VALUE
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+745
+</td>
+<td style="text-align:right;">
+2008
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1.3
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+-2.8
+</td>
+<td style="text-align:right;">
+-15.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+745.1
+</td>
+<td style="text-align:right;">
+2008
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+127
+</td>
+<td style="text-align:right;">
+-6.7
+</td>
+<td style="text-align:right;">
+-16.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+745.2
+</td>
+<td style="text-align:right;">
+2008
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+102
+</td>
+<td style="text-align:right;">
+-5.0
+</td>
+<td style="text-align:right;">
+-17.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+745.3
+</td>
+<td style="text-align:right;">
+2008
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+102
+</td>
+<td style="text-align:right;">
+2.2
+</td>
+<td style="text-align:right;">
+-5.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+745.4
+</td>
+<td style="text-align:right;">
+2008
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+51
+</td>
+<td style="text-align:right;">
+6.1
+</td>
+<td style="text-align:right;">
+1.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+745.5
+</td>
+<td style="text-align:right;">
+2008
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+15.6
+</td>
+<td style="text-align:right;">
+5.0
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>#inspect crime dataset
+head(crime_2008)%&gt;%
+  kbl() %&gt;%
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+YEAR
+</th>
+<th style="text-align:right;">
+MONTH
+</th>
+<th style="text-align:right;">
+DAY
+</th>
+<th style="text-align:left;">
+primary_type
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+2008
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+CRIM SEXUAL ASSAULT
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2008
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:left;">
+DECEPTIVE PRACTICE
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2008
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+24
+</td>
+<td style="text-align:left;">
+SEX OFFENSE
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2008
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+OFFENSE INVOLVING CHILDREN
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2008
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+26
+</td>
+<td style="text-align:left;">
+MOTOR VEHICLE THEFT
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2008
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+28
+</td>
+<td style="text-align:left;">
+THEFT
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>merged_data &lt;- left_join(crime_2008, weather_2008, by = c(&#39;YEAR&#39;, &#39;MONTH&#39;, &#39;DAY&#39;))
+
+merged_data$date &lt;- as.Date(with(merged_data,paste(YEAR,MONTH,DAY,sep=&quot;-&quot;)),&quot;%Y-%m-%d&quot;)
+merged_data &lt;- merged_data %&gt;%
+  select(-c(&#39;YEAR&#39;, &#39;MONTH&#39; ,&#39;DAY&#39;))</code></pre>
+</div>
+<div id="check-if-the-number-of-crimes-per-day-varies-over-time" class="section level2">
+<h2>Check if the number of crimes per day varies over time</h2>
+<p>Next, I checked to make sure that the number of crimes had some sort of vartiation over time.</p>
+<pre class="r"><code>merged_data %&gt;%
+  group_by(date)%&gt;%
+  count()%&gt;%
+  ggplot(aes(x = date, y = n)) +
+  geom_point() +
+  labs(
+    x = &#39;Date&#39;,
+    y = &#39;Number of Daily Crimes&#39;
+  )+
+  ggtitle(&#39;Number of Crimes by Day&#39;)</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p><strong><em>We can see that the amount of crime varies thoughout the year, with a peak in the middle of the year. Let’s inspect this further</em></strong></p>
+</div>
+<div id="inspect-relationship-between-temperature-and-crime" class="section level2">
+<h2>Inspect Relationship Between Temperature and Crime</h2>
+<p>Next, I wanted to plot the high and low temperature of each day on the same graph, to see if there was a correlation. I created a plot with 2 y axes: one for crime count and another for temperature.</p>
+<pre class="r"><code>crimeColor &lt;- &quot;#69b3a2&quot;
+lowTempColor &lt;- rgb(0.2, 0.6, 0.9, 1)
+highTempColor&lt;- &#39;#8a0303&#39;
+
+colors = c(&#39;# of Crimes&#39;=crimeColor, &#39;Daily Low&#39;=lowTempColor, &#39;Daily High&#39;=highTempColor)
+coeff = (10)
+coeff2 = (4)
+c2f  = 9/5
+
+merged_data %&gt;%
+  group_by(date, TMAX.VALUE, TMIN.VALUE)%&gt;%
+  count()%&gt;%
+  ggplot(aes(x = date)) +
+  
+  geom_point(aes(y = n ,color = &#39;# of Crimes&#39;)) + 
+  geom_line(aes(y = TMAX.VALUE * coeff , color = &#39;Daily High&#39;) ) + 
+  geom_line(aes(y = TMIN.VALUE * coeff , color = &#39;Daily Low&#39;)) + 
+  scale_y_continuous(
+    
+    # Features of the first axis
+    name = &quot;# of Crimes&quot;,
+    
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~ . / coeff, name=&quot;TEMP (C)&quot;)
+  ) +
+  labs(x = &quot;Day&quot;,
+         color = &quot;Legend&quot;)+
+  scale_color_manual(values = colors)+
+  ggtitle(&#39;Number of Crimes by Day With Temperature&#39;)+
+  theme_ipsum() </code></pre>
+<p><img src="/project/project1_files/figure-html/weather2crimes-1.png" width="672" /></p>
+<p><strong><em>There seems to be a pretty strong correlation between the number of crimes and temperature. As temperature goes up, the number of crimes goes up with it. Let’s see if that holds true for all types of criminal activity</em></strong></p>
+</div>
+<div id="breaking-up-crimes-per-day-by-type-of-crime" class="section level2">
+<h2>Breaking up Crimes per Day by type of Crime</h2>
+<p>Seeing that there was a fairly strong correlation with crime and temparature, I wanted to see if this held true for all types of crimes. The crime dataset already labels each crime with a type, so I picked the six most interesting crimes to plot along with the same high and low temperatures</p>
+<pre class="r"><code>unique_days = unique(merged_data$date)
+merged_data %&gt;%
+  filter(primary_type %in% 
+           c(&#39;BURGLARY&#39;, &#39;BATTERY&#39;, &#39;CRIMINAL DAMAGE&#39;, &#39;THEFT&#39;, &#39;NARCOTICS&#39;, &#39;ROBBERY&#39;))%&gt;%
+  group_by(date, primary_type, TMAX.VALUE, TMIN.VALUE)%&gt;%
+  count()%&gt;%
+  ggplot(aes(x = date)) +
+  geom_point(aes(y = n ,color = &#39;# of Crimes&#39;)) + 
+  geom_line(aes(y = TMAX.VALUE * coeff , color = &#39;Daily High&#39;) ) + 
+  geom_line(aes(y = TMIN.VALUE * coeff , color = &#39;Daily Low&#39;)) + 
+  scale_y_continuous(
+    
+    # Features of the first axis
+    name = &quot;# of Crimes&quot;,
+    
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~ . / coeff2, name=&quot;TEMP(C)&quot;)
+  ) +
+   labs(x = &quot;Day&quot;,
+         color = &quot;Legend&quot;)+
+  scale_color_manual(values = colors)+
+  ggtitle(&#39;Number of Crimes by Day by Crime Type with Temperature&#39;)+
+  theme_ipsum() + 
+  scale_x_date(breaks = &#39;5 months&#39;, date_labels = &#39;%m/%d&#39;)+
+  facet_wrap(~primary_type) </code></pre>
+<p><img src="/project/project1_files/figure-html/subsections-1.png" width="672" /></p>
+<p><strong><em>It seems that Battery ,Theft ,and Criminal Damage seem to follow the temparature trends, while the rest seem to stay fairly constant thorughout the year.</em></strong></p>
+</div>
+<div id="grouping-some-crime-types-together" class="section level2">
+<h2>Grouping some Crime types together</h2>
+<p>Some of the Crimes listed have very similar types, so let’s see if we can group more crimes together. We will create 4 larger groups of crimes: Violent, Robbery, and Drug Crimes, and a broad section for crimes not related to these</p>
+<pre class="r"><code>key &lt;- c(&quot;Other&quot;, &quot;Violent&quot;, &quot;Robbery&quot;, &quot;Drugs&quot;)
+names(key) &lt;- c(&quot;0&quot;, &quot;1&quot;, &quot;2&quot;, &quot;3&quot;)
+
+merged_data %&gt;%
+  group_by(date, primary_type, TMAX.VALUE, TMIN.VALUE)%&gt;%
+  mutate(
+    type = primary_type %in% c(&#39;ARSON&#39;, &#39;ASSAULT&#39;, &#39;BATTERY&#39;, &#39;KIDNAPPING&#39;, &#39;INTIMIDATION&#39;)+ #Crimes we consider violent
+    primary_type %in% c(&#39;BURGLARY&#39;, &#39;MOTOR_VEHICLE_THEFT&#39;, &#39;ROBBERY&#39;, &#39;THEFT&#39;)*2 + #Crimes we consider robbery
+    primary_type %in% c(&#39;LIQUOR_LAW_VIOLATION&#39;, &#39;NARCOTICS&#39;, &#39;OTHER_NARCOTIC_VIOLATION&#39;)*3 #Crimes we consider drug use
+  ) %&gt;%
+  
+  group_by(date, type, TMAX.VALUE, TMIN.VALUE) %&gt;%
+  count() %&gt;%
+  ggplot(aes(x = date, y = value)) +
+  geom_point(aes(y = n ,color = &#39;# of Crimes&#39;)) + 
+  geom_line(aes(y = TMAX.VALUE * coeff , color = &#39;Daily High&#39;) ) + 
+  geom_line(aes(y = TMIN.VALUE * coeff , color = &#39;Daily Low&#39;)) + 
+  ggtitle(&#39;Number of Crimes by Day by Crime Type With Temperature&#39;)+
+  scale_y_continuous(
+    
+    # Features of the first axis
+    name = &quot;# of Crimes&quot;,
+    
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~ . / coeff2, name=&quot;TEMP (C)&quot;)
+  ) +
+  #scale_x_discrete(guide = guide_axis(n.dodge=3))+
+  labs(x = &quot;Day&quot;,
+         color = &quot;Legend&quot;)+
+  scale_x_date(breaks = &#39;3 months&#39;, date_labels = &#39;%m/%d&#39;, )+
+  theme_ipsum() + 
+  facet_wrap(~type, labeller = labeller(type = key))</code></pre>
+<p><img src="/project/project1_files/figure-html/inspect-1.png" width="672" /></p>
+<p><strong><em>All crimes seems to follow the same temperature trend except drug use, which stays constant throughout the year.</em></strong></p>
+</div>
+<div id="crimes-per-day-v.s-precipitation" class="section level2">
+<h2>Crimes per Day v.s Precipitation</h2>
+<p>Finally, I investigated the relationship between daily crime and daily precipitation</p>
+<pre class="r"><code>range = range(merged_data$PRCP.VALUE)
+
+precip_table &lt;- merged_data %&gt;%
+  drop_na(PRCP.VALUE)%&gt;%
+  group_by(date, PRCP.VALUE)%&gt;%
+  count()%&gt;%
+  summarize(
+    n_crimes = n,
+  )%&gt;%
+  group_by(preciptiation_ranges=cut(PRCP.VALUE, breaks= seq(range[1], range[2], by = 6, inlude.lowest = TRUE)))%&gt;%
+  summarize(mean_crimes = mean(n_crimes)) %&gt;%
+  drop_na(preciptiation_ranges)</code></pre>
+<pre><code>## `summarise()` has grouped output by &#39;date&#39;. You can override using the
+## `.groups` argument.</code></pre>
+<pre class="r"><code>  precip_table %&gt;%
+    kbl() %&gt;%
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+preciptiation_ranges
+</th>
+<th style="text-align:right;">
+mean_crimes
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+(0,6]
+</td>
+<td style="text-align:right;">
+1135.284
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+(6,12]
+</td>
+<td style="text-align:right;">
+1114.167
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+(12,18]
+</td>
+<td style="text-align:right;">
+1091.417
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+(18,24]
+</td>
+<td style="text-align:right;">
+1232.429
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+(24,30]
+</td>
+<td style="text-align:right;">
+1188.667
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+(30,36]
+</td>
+<td style="text-align:right;">
+1184.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+(36,42]
+</td>
+<td style="text-align:right;">
+1104.667
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+(42,48]
+</td>
+<td style="text-align:right;">
+1016.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+(60,66]
+</td>
+<td style="text-align:right;">
+1184.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+(72,78]
+</td>
+<td style="text-align:right;">
+928.000
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>  precip_table %&gt;%
+    ggplot(aes(x = preciptiation_ranges, y = mean_crimes))+
+    geom_point() +
+    ggtitle(&quot;Crimes per Day with Precipitation&quot;) + 
+    labs(
+      y = &quot;# of Crimes&quot;,
+      x = &quot;Precipitation (mm)&quot;
+    )</code></pre>
+<p><img src="/project/project1_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<pre class="r"><code>  summary(merged_data$PRCP.VALUE)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.000   0.000   0.000   3.405   1.500 168.700</code></pre>
+<p><strong><em>After investigating the plot, the relationship between precipitation and crimes per day doesn’t seem to be as drastic as expected. There is some dropoff on days with heavier rain, but there are also very few days with that much precipitation, so this could just be a result of a small sample size.</em></strong></p>
+</div>
+<div id="citations" class="section level2">
+<h2>Citations</h2>
+<p>City of chicago: Data Portal: City of chicago: Data Portal. Chicago. (n.d.). Retrieved March 30, 2022, from <a href="https://data.cityofchicago.org/" class="uri">https://data.cityofchicago.org/</a></p>
+<p>Index of /pub/data. (n.d.). Retrieved March 30, 2022, from <a href="https://www1.ncdc.noaa.gov/pub/data/" class="uri">https://www1.ncdc.noaa.gov/pub/data/</a></p>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="/js/docs.min.js"></script>
+<script src="/js/main.js"></script>
+
+<script src="/js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

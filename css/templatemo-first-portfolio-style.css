@@ -12,8 +12,8 @@ https://templatemo.com/tm-578-first-portfolio
 -----------------------------------------*/
 :root {
   --white-color:                  #ffffff;
-  --primary-color:                #535da1;
-  --secondary-color:              #202020;
+  --primary-color:                #304f6d;
+  --secondary-color:              #2f2f2f;
   --section-bg-color:             #f9f9f9;
   --dark-color:                   #000000;
   --p-color:                      #717275;
@@ -583,6 +583,9 @@ strong {
   padding-left: 20px;
 }
 
+.resume-section{
+  padding-top: 20px;
+}
 
 /*---------------------------------------
   FEATURED              

@@ -11,7 +11,7 @@ https://templatemo.com/tm-578-first-portfolio
   CUSTOM PROPERTIES ( VARIABLES )             
 -----------------------------------------*/
 :root {
-  --white-color:                  #    ;
+  --white-color:                  #ffffff;
   --primary-color:                #727aab;
   --secondary-color:              #2f2f2f;
   --section-bg-color:             #f9f9f9;
@@ -266,9 +266,10 @@ strong {
 .custom-btn {
   background: var(--secondary-color);
   border-radius: var(--border-radius-large);
-  color: var(--white-color);
+  color: var(--dark-color);
   font-weight: var(--font-weight-bold);
   padding: 12px 24px;
+
 }
 
 .custom-btn:hover {
@@ -315,7 +316,7 @@ strong {
 
 .is-sticky .navbar-brand,
 .is-sticky .navbar-brand:hover {
-  color: var(--dark-color);
+  color: var(--primary-color);
 }
 
 .is-sticky .navbar-nav .nav-link {
@@ -348,14 +349,14 @@ strong {
   padding: 10px 25px;
 }
 
-.navbar-brand {
-  font-size: var(--h4-font-size);
-  font-weight: var(--font-weight-bold);
-}
 
 .navbar-brand,
 .navbar-brand:hover {
   color: var(--white-color);
+}
+
+.navbar-brand{
+  color:  var(--white-color);
 }
 
 .navbar-expand-lg .navbar-nav .nav-link {
@@ -484,7 +485,7 @@ strong {
 .hero-title,
 .hero h4 {
   background: var(--primary-color);
-  color: var(--white-color);
+  color: var(--dark-color);
   box-shadow: 0 1rem 3rem rgba(0,0,0,.175);
   border-radius: var(--border-radius-large);
   display: inline-block;
@@ -930,6 +931,7 @@ strong {
   list-style: none;
   display: inline-block;
   vertical-align: top;
+  color: var(--dark-color);
 }
 
 .footer-menu-link {
@@ -1049,16 +1051,13 @@ strong {
   .navbar .custom-btn {
     font-size: var(--copyright-text-font-size);
     padding: 8px 16px;
+    color: var(--dark-color);
   }
 
   .navbar .container {
     background: var(--white-color);
   }
 
-  .navbar-brand,
-  .navbar-brand:hover {
-    color: var(--dark-color);
-  }
 
   .navbar-icon {
     background: var(--secondary-color);
